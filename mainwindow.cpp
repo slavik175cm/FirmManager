@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     file.open(QIODevice::ReadWrite);
 
     init();
-    qDebug() << 229;
+    sort();
     showall();
 }
 
@@ -35,6 +35,7 @@ void MainWindow::init() {
         tasks.push_back(task);
     }
 }
+
 void MainWindow::showall() {
     ui->textBrowser->clear();
     for (int i = 0; i < tasks.size(); i++) {
@@ -48,11 +49,27 @@ void MainWindow::showall() {
     }
     ui->textBrowser->moveCursor(QTextCursor::Start);
 }
+
+void MainWindow::swap(Task *&a, Task *&b) {
+    Task *c = a;
+    a = b;
+    b = c;
+}
+
+void MainWindow::sort() {
+    for (int i = 0; i < tasks.size(); i++)
+        for (int j = 0; j < tasks.size() - 1; j++)
+            if (tasks[j]->start > tasks[j + 1]->start) {
+                swap(tasks[j], tasks[j + 1]);
+            }
+}
+
 QDate MainWindow::transform(QString s) {
     QStringList list = s.split('.');
     return QDate(list[2].toInt(), list[1].toInt(), list[0].toInt());
 
 }
+
 MainWindow::~MainWindow()
 {
     delete ui;
@@ -209,5 +226,6 @@ void MainWindow::on_add_new_project_clicked()
                 ui->start->date(), ui->deadline->date(), ui->end->date());
     write_in_file(task);
     tasks.push_back(task);
+    sort();
     on_comboBox_activated(ui->comboBox->itemText(typ));
 }

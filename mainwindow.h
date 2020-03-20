@@ -18,6 +18,8 @@ public:
     ~MainWindow();
     QDate transform(QString s);
     void write_in_file(Task *task);
+    void swap(Task *&a, Task *&b);
+    void sort();
     QFile file;
     QVector<Task*> tasks;
     void init();
