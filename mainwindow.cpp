@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QDebug>
 #include <QMouseEvent>
+#include <QFileDialog>
+#include <QMessageBox>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -16,23 +18,26 @@ MainWindow::MainWindow(QWidget *parent)
     QFont a;
     a.setWeight(100);
     ui->start->setFont(a);
-
     ui->comboBox_2->hide();
-    file.setFileName("d:\\qt_projects\\FirmManager\\file.txt");
-    file.open(QIODevice::ReadWrite);
+    tasks.resize(0);
 
-    init();
-    sort();
-    showall();
 }
 
 void MainWindow::init() {
-    tasks.resize(0);
+    //tasks.resize(0);
     while (!file.atEnd()) {
         QStringList list = QString(file.readLine()).split(",");
         if (list.size() == 1) continue;
         Task *task = new Task(list[0], list[1], list[2], list[3], transform(list[4]), transform(list[5]), transform(list[6]));
-        tasks.push_back(task);
+        bool ok = 1;
+        for (int i = 0; i < tasks.size(); i++)
+            if (tasks[i]->project_name == task->project_name && tasks[i]->manager == task->manager &&
+                tasks[i]->worker == task->worker && tasks[i]->start == task->start
+                && tasks[i]->dead_line == task->dead_line &&  tasks[i]->end == task->end) {
+                ok = 0;
+                break;
+             }
+        if (ok) tasks.push_back(task);
     }
 }
 
@@ -67,7 +72,6 @@ void MainWindow::sort() {
 QDate MainWindow::transform(QString s) {
     QStringList list = s.split('.');
     return QDate(list[2].toInt(), list[1].toInt(), list[0].toInt());
-
 }
 
 MainWindow::~MainWindow()
@@ -217,15 +221,56 @@ void MainWindow::write_in_file(Task *task) {
     strcat(a, ", " + task->start.toString(Qt::SystemLocaleShortDate).toUtf8());
     strcat(a, ", " + task->dead_line.toString(Qt::SystemLocaleShortDate).toUtf8());
     strcat(a, ", " + task->end.toString(Qt::SystemLocaleShortDate).toUtf8() + ".\r\n");
-    file.write(a);
+    savefile.readAll();
+    savefile.write(a);
+    savefile.close();
 }
 
 void MainWindow::on_add_new_project_clicked()
 {
     Task *task = new Task(ui->project_name->text(), ui->task_name->text(), ui->worker->text(), ui->manager->text(),
                 ui->start->date(), ui->deadline->date(), ui->end->date());
+    if (!savefile.isOpen()) {
+        QMessageBox::information(this, "Ошибка", "выберите файл для сохранения");
+        return;
+    }
     write_in_file(task);
-    tasks.push_back(task);
+    QMessageBox::information(this, "!", "Проект добавлен");
+    //tasks.push_back(task);
+    //sort();
+    //on_comboBox_activated(ui->comboBox->itemText(typ));
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    QString file_name = QFileDialog::getOpenFileName(this, "Open a file", "D:\\qt_projects\\FirmManager");
+    qDebug() << file_name;
+    file.setFileName(file_name);
+    file.open(QIODevice::ReadWrite);
+    init();
     sort();
-    on_comboBox_activated(ui->comboBox->itemText(typ));
+    showall();
+}
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    QString file_name = QFileDialog::getSaveFileName(this, "Open a file", "D:\\qt_projects\\FirmManager");
+    qDebug() << file_name;
+    savefile.setFileName(file_name);
+    savefile.open(QIODevice::ReadWrite);
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    QString file_name = QFileDialog::getSaveFileName(this, "Open a file", "D:\\qt_projects\\FirmManager");
+    qDebug() << file_name;
+    savefile.setFileName(file_name);
+    savefile.open(QIODevice::ReadWrite);
+    qDebug() << tasks;
+    for (int i = 0; i < tasks.size(); i++) {
+        write_in_file(tasks[i]);
+        savefile.open(QIODevice::ReadWrite);
+    }
+    savefile.close();
+    QMessageBox::information(this, "!", "Текущая база загружена в файл");
 }

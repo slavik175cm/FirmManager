@@ -20,7 +20,7 @@ public:
     void write_in_file(Task *task);
     void swap(Task *&a, Task *&b);
     void sort();
-    QFile file;
+    QFile file, savefile;
     QVector<Task*> tasks;
     void init();
     void showall();
@@ -36,6 +36,12 @@ private slots:
     void on_calendarWidget_clicked(const QDate &date);
 
     void on_add_new_project_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_pushButton_2_clicked();
+
+    void on_pushButton_3_clicked();
 
 private:
     Ui::MainWindow *ui;
